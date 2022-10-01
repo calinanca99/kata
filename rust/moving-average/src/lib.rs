@@ -4,35 +4,37 @@ use thiserror::Error;
 pub enum MovingAverageError {
     #[error("`window` cannot be higher than array length")]
     WindowSize,
-    #[error("array must contain at least one element")]
+    #[error("`array` must contain at least one element")]
     EmptyArray,
 }
 
-pub fn moving_averages(array: &[f64], window: usize) -> Result<Vec<f64>, MovingAverageError> {
+pub fn moving_averages(array: &[f64], window_size: usize) -> Result<Vec<f64>, MovingAverageError> {
     if array.is_empty() {
         return Err(MovingAverageError::EmptyArray);
     }
 
     let array_length = array.len();
 
-    if window > array_length {
+    if window_size > array_length {
         return Err(MovingAverageError::WindowSize);
     }
 
     let mut moving_averages = vec![];
 
-    for i in 0..=array_length - window {
-        let mut sum = 0.0;
+    let mut windows = array.windows(window_size);
 
-        for j in 0..window {
-            sum += array[i + j];
-        }
-
-        let moving_average = sum / window as f64;
-        moving_averages.push(moving_average)
+    while let Some(window) = windows.next() {
+        moving_averages.push(average(window))
     }
 
     Ok(moving_averages)
+}
+
+fn average(array: &[f64]) -> f64 {
+    let len = array.len();
+    let sum = array.iter().sum::<f64>();
+
+    sum / len as f64
 }
 
 #[cfg(test)]
