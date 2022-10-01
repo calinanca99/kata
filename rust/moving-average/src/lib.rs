@@ -21,11 +21,9 @@ pub fn moving_averages(array: &[f64], window_size: usize) -> Result<Vec<f64>, Mo
 
     let mut moving_averages = vec![];
 
-    let mut windows = array.windows(window_size);
+    let windows = array.windows(window_size);
 
-    while let Some(window) = windows.next() {
-        moving_averages.push(average(window))
-    }
+    windows.for_each(|window| moving_averages.push(average(window)));
 
     Ok(moving_averages)
 }
