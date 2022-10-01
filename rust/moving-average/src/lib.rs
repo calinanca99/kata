@@ -54,20 +54,7 @@ mod tests {
     }
 
     #[test]
-    fn compute_moving_average_with_empty_array() {
-        // Arrange
-        let array = [];
-        let window = 5;
-
-        // Act
-        let sut = moving_averages(&array, window);
-
-        // Assert
-        assert!(sut.is_err())
-    }
-
-    #[test]
-    fn compute_moving_average_with_windows_1_returns_the_same_array() {
+    fn compute_moving_average_with_window_1_returns_the_same_array() {
         // Arrange
         let array = [1.0, 2.0, 3.0, 4.0, 5.0];
         let window = 1;
@@ -78,6 +65,19 @@ mod tests {
         // Assert
         let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         assert_eq!(expected, sut.unwrap());
+    }
+
+    #[test]
+    fn errors_array_is_empty() {
+        // Arrange
+        let array = [];
+        let window = 5;
+
+        // Act
+        let sut = moving_averages(&array, window);
+
+        // Assert
+        assert!(sut.is_err())
     }
 
     #[test]
