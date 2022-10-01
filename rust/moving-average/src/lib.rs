@@ -1,14 +1,28 @@
-pub fn moving_averages(array: &[f64], window: usize) -> Vec<f64> {
-    let mut moving_averages = vec![];
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum MovingAverageError {
+    #[error("`window` cannot be higher than array length")]
+    WindowSize,
+    #[error("array must contain at least one element")]
+    EmptyArray,
+}
+
+pub fn moving_averages(array: &[f64], window: usize) -> Result<Vec<f64>, MovingAverageError> {
+    if array.is_empty() {
+        return Err(MovingAverageError::EmptyArray);
+    }
 
     let array_length = array.len();
 
-    for i in 0..array_length {
-        let mut sum = 0.0;
+    if window > array_length {
+        return Err(MovingAverageError::WindowSize);
+    }
 
-        if i == array_length - window + 1 {
-            break;
-        }
+    let mut moving_averages = vec![];
+
+    for i in 0..=array_length - window {
+        let mut sum = 0.0;
 
         for j in 0..window {
             sum += array[i + j];
@@ -18,8 +32,7 @@ pub fn moving_averages(array: &[f64], window: usize) -> Vec<f64> {
         moving_averages.push(moving_average)
     }
 
-    dbg!(&moving_averages);
-    moving_averages
+    Ok(moving_averages)
 }
 
 #[cfg(test)]
@@ -37,7 +50,7 @@ mod tests {
 
         // Assert
         let expected = vec![2.5, 3.5];
-        assert_eq!(expected, sut);
+        assert_eq!(expected, sut.unwrap());
     }
 
     #[test]
@@ -50,8 +63,7 @@ mod tests {
         let sut = moving_averages(&array, window);
 
         // Assert
-        let expected: Vec<f64> = vec![];
-        assert_eq!(expected, sut);
+        assert!(sut.is_err())
     }
 
     #[test]
@@ -65,17 +77,19 @@ mod tests {
 
         // Assert
         let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        assert_eq!(expected, sut);
+        assert_eq!(expected, sut.unwrap());
     }
 
     #[test]
-    #[should_panic]
-    fn panics_when_window_size_is_larger_than_array_length() {
+    fn errors_when_window_size_is_larger_than_array_length() {
         // Arrange
         let array = [1.0, 2.0, 3.0, 4.0, 5.0];
         let window = 9;
 
         // Act
-        let _sut = moving_averages(&array, window);
+        let sut = moving_averages(&array, window);
+
+        // Assert
+        assert!(sut.is_err())
     }
 }
