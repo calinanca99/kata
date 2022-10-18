@@ -1,37 +1,41 @@
-use thiserror::Error;
-
-#[derive(Error, Debug)]
-pub enum MovingAverageError {
-    #[error("`window` cannot be higher than array length")]
-    WindowSize,
-    #[error("`array` must contain at least one element")]
-    EmptyArray,
-}
-
-pub fn moving_averages(array: &[f64], window_size: usize) -> Result<Vec<f64>, MovingAverageError> {
+/// Returns a vector whose elements represent the arithmetic mean of each n
+/// consecutive elements from `array` (i.e.: a window), where n == `window_size`.
+///
+///
+/// ## Notes
+/// - If the input array is empty `None` is returned.
+///
+/// - If the window size is larger than the length of the array, the window size
+/// becomes the length of the array.
+///
+/// - If one of the sums of a window overflows then the average for that window is
+/// infinity (`f64::INFINITY`).
+pub fn moving_average(array: &[f64], window_size: usize) -> Option<Vec<f64>> {
     if array.is_empty() {
-        return Err(MovingAverageError::EmptyArray);
+        return None;
     }
 
     let array_length = array.len();
 
-    if window_size > array_length {
-        return Err(MovingAverageError::WindowSize);
-    }
+    let window_size = if window_size > array_length {
+        array_length
+    } else {
+        window_size
+    };
 
-    Ok(array.windows(window_size).map(average).collect::<Vec<_>>())
+    Some(array.windows(window_size).map(average).collect::<Vec<_>>())
 }
 
 fn average(array: &[f64]) -> f64 {
-    let len = array.len();
+    let len = array.len() as f64;
     let sum = array.iter().sum::<f64>();
 
-    sum / len as f64
+    sum / len
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::moving_averages;
+    use crate::moving_average;
 
     #[test]
     fn computes_moving_average_with_arbitrary_window_size() {
@@ -40,7 +44,7 @@ mod tests {
         let window = 4;
 
         // Act
-        let sut = moving_averages(&array, window);
+        let sut = moving_average(&array, window);
 
         // Assert
         let expected = vec![2.5, 3.5];
@@ -54,7 +58,7 @@ mod tests {
         let window = 1;
 
         // Act
-        let sut = moving_averages(&array, window);
+        let sut = moving_average(&array, window);
 
         // Assert
         let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -62,29 +66,30 @@ mod tests {
     }
 
     #[test]
-    fn errors_array_is_empty() {
+    fn returns_none_when_array_is_empty() {
         // Arrange
         let array = [];
         let window = 5;
 
         // Act
-        let sut = moving_averages(&array, window);
+        let sut = moving_average(&array, window);
 
         // Assert
-        assert!(sut.is_err())
+        assert!(sut.is_none())
     }
 
     #[test]
-    fn errors_when_window_size_is_larger_than_array_length() {
+    fn uses_length_of_array_as_window_size_when_window_size_is_greater_than_length_of_the_array() {
         // Arrange
         let array = [1.0, 2.0, 3.0, 4.0, 5.0];
         let window = 9;
 
         // Act
-        let sut = moving_averages(&array, window);
+        let sut = moving_average(&array, window);
 
         // Assert
-        assert!(sut.is_err())
+        let expected = vec![3.0];
+        assert_eq!(expected, sut.unwrap())
     }
 
     #[test]
@@ -94,7 +99,7 @@ mod tests {
         let window = 2;
 
         // Act
-        let sut = moving_averages(&array, window);
+        let sut = moving_average(&array, window);
 
         // Assert
         let expected = vec![f64::INFINITY, f64::INFINITY];
