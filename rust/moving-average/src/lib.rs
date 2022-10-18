@@ -19,13 +19,7 @@ pub fn moving_averages(array: &[f64], window_size: usize) -> Result<Vec<f64>, Mo
         return Err(MovingAverageError::WindowSize);
     }
 
-    let mut moving_averages = vec![];
-
-    let windows = array.windows(window_size);
-
-    windows.for_each(|window| moving_averages.push(average(window)));
-
-    Ok(moving_averages)
+    Ok(array.windows(window_size).map(average).collect::<Vec<_>>())
 }
 
 fn average(array: &[f64]) -> f64 {
@@ -91,5 +85,19 @@ mod tests {
 
         // Assert
         assert!(sut.is_err())
+    }
+
+    #[test]
+    fn returns_inf_when_sum_of_a_windows_overflows() {
+        // Arrange
+        let array = [f64::MAX; 3];
+        let window = 2;
+
+        // Act
+        let sut = moving_averages(&array, window);
+
+        // Assert
+        let expected = vec![f64::INFINITY, f64::INFINITY];
+        assert_eq!(expected, sut.unwrap());
     }
 }
