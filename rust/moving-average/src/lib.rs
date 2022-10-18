@@ -20,18 +20,23 @@ pub fn moving_average(array: &[f64], n: usize) -> Option<Vec<f64>> {
     let window_size = usize::min(n, array.len());
 
     if array.is_empty() || f64::value_from(window_size).is_err() {
-        return None;
+        None
+    } else {
+        Some(
+            array
+                .windows(window_size)
+                .map(|window| average(window, window_size))
+                .collect::<Vec<_>>(),
+        )
     }
-
-    Some(array.windows(window_size).map(average).collect::<Vec<_>>())
 }
 
-fn average(window: &[f64]) -> f64 {
+fn average(window: &[f64], window_size: usize) -> f64 {
     // `unwrap()` is safe since condition has been checked previously
-    let len = f64::value_from(window.len()).unwrap();
+    let n = f64::value_from(window_size).unwrap();
     let sum = window.iter().sum::<f64>();
 
-    sum / len
+    sum / n
 }
 
 #[cfg(test)]
